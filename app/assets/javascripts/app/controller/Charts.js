@@ -16,6 +16,7 @@ Ext.define('CC.controller.Charts', {
   init: function() {
     this.control({
       'chart_tree': {
+      	//itemclick: this.loadAll,
         itemdblclick: this.editChart,
         selectionchange: this.selectionChange
       },
@@ -30,6 +31,9 @@ Ext.define('CC.controller.Charts', {
       },
       'chart_form button[action=save]': {
         click: this.createOrUpdateChart
+      },
+      'button[action=showChart]': {
+        click: this.loadAll //true == show chart
       },
       'button[action=addChart]': {
         click: this.addChart
@@ -73,6 +77,88 @@ Ext.define('CC.controller.Charts', {
 		*/
   },
   
+	showChart: function() {
+		//show chart only if all stores are loaded
+		var all_stores_loaded = this.isStoresLoaded();
+		if(all_stores_loaded) {
+			//get selected record from grid - show selected chart
+			var chart_record = Ext.getCmp('chart_tree').getSelectedChart();
+			
+			var details_store = this.getStore('Details');
+			var set_store = this.getStore('DataSets');
+			var data_stores = this.data_stores;
+			
+			var selectedChartType = chart_record.data.chart_type;
+			var prevSelected = Ext.getCmp('chart_tree').getPreviousSelectedChart;
+			
+			var configs = CC.ChartsConfig;
+			var hcConfg = null;
+			
+			var initLoad = true;
+			
+			switch (selectedChartType) {
+				case 'Line':
+					hcConfig = configs.getLine();
+				break;
+				case 'Spline':
+					hcConfig = configs.getSpline();
+				break;
+			}
+			// data inside the config
+			hcConfig = Ext.clone(hcConfig);
+			
+			details_record = details_store.getAt(0);
+			if(details_record) {
+				//console.log(details_record.data);
+				//console.log(hcConfig);
+				hcConfig.chartConfig.title.text = details_record.data.title;
+				hcConfig.chartConfig.subtitle.text = details_record.data.subtitle;
+				hcConfig.chartConfig.yAxis.title.text = details_record.data.ytitle;
+				hcConfig.chartConfig.xAxis[0].title.text = details_record.data.xtitle;
+			}
+			//hcConfig
+			
+			// New chart with config and id
+			hcConfig.id = 'main_chart';
+			mainChart = Ext.widget('highchart', hcConfig);
+			
+			for(var i in data_stores) {
+				var data = [];
+				var n = 0;
+				var data_set_record;
+				data_stores[i].data.each(function(record, index, totalItems ) {
+					if(n==0) {
+						data_set_record = set_store.findRecord('id', record.data.data_set_id);
+					}
+					data[n] = [];
+					data[n][0] = parseInt(record.data.x_field);
+					data[n][1] = record.data.data_index;
+					n++;
+				});
+				//console.log(data);
+				if(data_set_record) {
+					mainChart.addSeries([{
+						name: data_set_record.data.name,
+    				data: data,
+    				type: (data_set_record.data.series_type == 'Step') ? 'line' : data_set_record.data.series_type.toLowerCase(),
+    				color: data_set_record.data.color,
+    				dashStyle: data_set_record.data.dash_style.toLowerCase(),
+    				step: (data_set_record.data.series_type == 'Step') ? true : false,
+					}], true);
+				}
+			}
+			//mainChart.draw();
+			/*
+			chartStore && mainChart.bindStore(chartStore, true);
+			*/
+			Ext.getCmp('chart_panel').add(mainChart);
+			Ext.getCmp('main_chart').draw();
+		}
+  },
+
+//-------------------------------------------------------------------------------------
+//addSerieTab - actual form
+//-------------------------------------------------------------------------------------
   //action runned from form with btn addSerieTab or from controller (this controller must send correct btn)
   //will add tab but also create new data store for serie data
   addSerieTab: function(btn) {
@@ -81,26 +167,6 @@ Ext.define('CC.controller.Charts', {
   	this.data_stores[tabindex] = Ext.create('CC.store.Data');
   	var form = formWin.addSerieTab(this.data_stores[tabindex]);
   	return form;
-  },
-  
-  saveData: function(btn) {
-  	var form = btn.sender_grid.up('chart_form').down('tabpanel').down('tabpanel').getActiveTab();
-  	/*
-  	console.log(form.data_set_id);
-  	var data_store = [];
-  	data_store[form.data_set_id] = Ext.create('CC.store.Data');
-  	console.log(data_store);
-		if(form.data_set_id>0) {
-			data_store = Ext.getStore('Data');
-			data_store.getProxy().url = '/data_sets/'+form.data_set_id+'/data';
-			data_store.sync({
-				success: function(data_batch, data_options) {
-				},
-				failure: function(data_batch, data_options) {
-				},
-			});
-		}
-		*/
   },
 
 //-------------------------------------------------------------------------------------
@@ -115,56 +181,151 @@ Ext.define('CC.controller.Charts', {
   },
   
 //-------------------------------------------------------------------------------------
+//loadAll - function to load all data for selected chart - should be called after showChartButton preesed, show tells if chart is shown
+//-------------------------------------------------------------------------------------
+	loadAll: function() {
+		this.data_stores = []; //first remove any data stores previously created
+		//get selected record from grid
+		var chart_record = Ext.getCmp('chart_tree').getSelectedChart();
+		var chart_id = chart_record.data.id;
+		var detailsForm = null;
+		var addSerieBtn = null;
+		var loadToForm = false;
+		var showChartAfterLoad = true;
+		
+		this.loadDetails(chart_id, detailsForm, loadToForm, showChartAfterLoad);
+		this.loadDataSets(chart_id, addSerieBtn, loadToForm, showChartAfterLoad);
+	},
+	
+//-------------------------------------------------------------------------------------
+//isStoresLoaded - check if all stores are loaded and return true/false accordingly
+//-------------------------------------------------------------------------------------
+	isStoresLoaded: function() {
+		//get selected record from grid - show this chart
+		var chart_record = Ext.getCmp('chart_tree').getSelectedChart();
+		
+		//first check if all stores finished loading
+		var chart_store = this.getStore('Charts');
+		var details_store = this.getStore('Details');
+		var set_store = this.getStore('DataSets');
+		var data_stores = this.data_stores;
+		var all_stores_loaded = true;
+		
+		if(chart_store.isLoading()) {
+			//console.log("chart_store is loading");
+			all_stores_loaded = false;
+		}
+		
+		if(details_store.isLoading()) {
+			//console.log("details_store is loading");
+			all_stores_loaded = false;
+		}
+		
+		if(set_store.isLoading()) {
+			//console.log("set_store is loading");
+			all_stores_loaded = false;
+		}
+		
+		for(var i in data_stores) {
+			if(data_stores[i].isLoading()) {
+				//console.log("data_store " + i + " is loading");
+				all_stores_loaded = false;
+			}
+		}
+		
+		return all_stores_loaded;
+	},
+  
+//-------------------------------------------------------------------------------------
+//loadDetails - get details record, and if it exists and form exist -> put to form 
+//-------------------------------------------------------------------------------------
+	//chart_id - load details for it, detailsForm to load data to (if exists), loadToForm - if data should be loaded to form or not, show - if chart should be showed
+	loadDetails: function(chart_id, detailsForm, loadToForm, show) {
+		//details
+		//set url to get details of selected chart
+  	detail_store = Ext.getStore('Details');
+  	detail_store.getProxy().url = '/charts/'+chart_id+'/details';
+  	me = this;
+  	
+  	//load data to form only after they are loaded - must be done this way, because its asynchronous
+  	detail_store.load(function () {
+			detail_record = detail_store.getAt(0);
+			if(detail_record && loadToForm && detailsForm) {
+				detailsForm.loadRecord(detail_record);
+			}
+			if(show) {
+				me.showChart(); //show chart after load, (chart is shown only after all stores are loaded
+			}
+		});
+		return detail_store;
+  },
+
+//-------------------------------------------------------------------------------------
+//loadDataSets - load data sets and data + optionaly put to form
+//------------------------------------------------------------------------------------- 
+//chart_id - load data set and data for it, addSerieBtn btn used to create new serie tab, loadToForm - if data should be loaded to form or not, show - if chart should be showed
+  loadDataSets:  function(chart_id, addSerieBtn, loadToForm, show) {
+  	//data sets + data
+		//set url to get data sets of selected chart
+		var set_store = this.getStore('DataSets');
+		set_store.getProxy().url = '/charts/'+chart_id+'/data_sets';
+		me = this;
+		//load data to form only after they are loaded - must be done this way, because its asynchronous
+		set_store.load(function () {
+			var record_num = 0;
+			//for each data set find form and write info to it
+			set_store.data.each(function(record, index, totalItems ) {
+			
+				if(loadToForm) {
+					//load data_set to tab form
+					form = me.addSerieTab(addSerieBtn);
+					form.getForm().loadRecord(record);
+					form.up('panel').data_set_id = record.data.id;
+					var tabindex = form.up('panel').tabindex;
+					var data_set_id = form.up('panel').data_set_id;
+				}
+				//load data stores (writable grid would update automatically
+				if(!me.data_stores[record_num]) {
+					me.data_stores[record_num] = Ext.create('CC.store.Data'); //if it dont exists - create new
+				}
+				me.data_stores[record_num].getProxy().url = '/data_sets/'+record.data.id+'/data';
+				me.data_stores[record_num].load(function() {
+					if(show) {
+						me.showChart(); //show chart after load, (chart is shown only after all stores are loaded)
+					}
+				});
+				record_num++;
+    	});
+    	if(show) {
+				me.showChart(); //show chart after load, (chart is shown only after all stores are loaded)
+			}
+		});
+		return set_store;
+	},
+  
+//-------------------------------------------------------------------------------------
 //editChart - open form with preset record data
 //-------------------------------------------------------------------------------------
   editChart: function() {
   	this.data_stores = []; //first remove any data stores previously created
   	//chart
-  	var chart_record = Ext.getCmp('chart_tree').getSelectedChart(); //get selected record from grid
 		
 		var formWin = Ext.widget('chart_form'); //create form window
 		var chartForm = formWin.down('form');
 		var detailsForm = formWin.down('form').next('form');
-		var firstSetForm = formWin.down('tabpanel').down('tabpanel').down('form');
 		var addSerieBtn = formWin.down('tabpanel').down('panel').next('panel').down('button');
 		var me = this;
+		var loadToForm = true;
+		var showChartAfterLoad = false;
 		
+		var chart_record = Ext.getCmp('chart_tree').getSelectedChart(); //get selected record from grid
    	chartForm.loadRecord(chart_record);	//load chart record to form
    	
-   	//details
-		//set url to get details of selected chart
-		detail_store = Ext.getStore('Details');
-		detail_store.getProxy().url = '/charts/'+chart_record.data.id+'/details';
-		//load data to form only after they are loaded - must be done this way, because its asynchronous
-		detail_store.load(function () {
-			detail_record = detail_store.getAt(0);
-			//ak existuju nejake detaily, tak ich uloz
-			if(detail_record) {
-				detailsForm.loadRecord(detail_record);
-			}
-		});
+   	//load details to form
+   	me.loadDetails(chart_record.data.id, detailsForm, loadToForm, showChartAfterLoad);
 		
-		//data sets + data
-		//set url to get data sets of selected chart
-		set_store = this.getStore('DataSets');
-		set_store.getProxy().url = '/charts/'+chart_record.data.id+'/data_sets';
-		//load data to form only after they are loaded - must be done this way, because its asynchronous
-		set_store.load(function () {
-			var form = firstSetForm;
-			//for each data set find form and write info to it
-			set_store.data.each(function(record, index, totalItems ) {
-				//load data_set to tab form
-				form = me.addSerieTab(addSerieBtn);
-				form.getForm().loadRecord(record);
-				
-				//load data stores (writable grid would update automatically
-				form.up('panel').data_set_id = record.data.id;
-				var tabindex = form.up('panel').tabindex;
-				var data_set_id = form.up('panel').data_set_id;
-				me.data_stores[tabindex-1].getProxy().url = '/data_sets/'+record.data.id+'/data';
-				me.data_stores[tabindex-1].load();
-    	});
-		});
+		//load data sets and data to form (data to grid)
+		me.loadDataSets(chart_record.data.id, addSerieBtn, loadToForm, showChartAfterLoad);
   },
 
 //-------------------------------------------------------------------------------------
@@ -405,6 +566,8 @@ Ext.define('CC.controller.Charts', {
         	}
         	
         	formWin.close();
+        	
+        	me.showChart();
        	},
        	//chart_store failure
         failure: function(batch, options) {
@@ -464,5 +627,7 @@ Ext.define('CC.controller.Charts', {
       tree.disableRecordButtons();
     }
 	},
+	
+
 	
 });

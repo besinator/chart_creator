@@ -9,6 +9,8 @@ Ext.define('CC.view.chart.Form', {
 	},
   autoShow: true,
   
+  y: 50,
+  
   combo_chart_types: [
   	'Line',
   	'Spline',
@@ -68,16 +70,16 @@ Ext.define('CC.view.chart.Form', {
 		defaults: {
 			anchor: '100%'
 		},
-
 		items: [{
+		
       xtype: 'form',
       //title: 'Chart Form',
       layout: 'form',
       bodyPadding: '5 5 5 5',
       width: 500,
-      
       //form fields
       items: [{
+      
       	//Base information fieldset and fields
       	xtype:'fieldset',
 				title: 'Chart information',
@@ -87,7 +89,8 @@ Ext.define('CC.view.chart.Form', {
 				defaults: {
 					anchor: '100%'
 				},
-      	items: [{   
+      	items: [{ 
+      	  
 					xtype: 'hidden',
 					name : 'id',
 					fieldLabel: 'id'
@@ -107,7 +110,9 @@ Ext.define('CC.view.chart.Form', {
         	store: this.combo_chart_types,
         	queryMode: 'local',
         	typeAhead: true
+        	
       	}],
+      	
       }]
      }, {
      	xtype: 'form',
@@ -115,19 +120,20 @@ Ext.define('CC.view.chart.Form', {
       layout: 'form',
       bodyPadding: '5 5 5 5',
       width: 500,
-      
       //form fields
       items: [{
+      
       	//More information fieldset and fields
       	xtype:'fieldset',
 				title: 'Chart configuration',
 				layout: 'anchor',
 				collapsible: true,
-				collapsed: true,
+				collapsed: false,
 				defaults: {
 					anchor: '100%'
 				},
       	items: [{
+      	
         	xtype: 'textfield',
         	name : 'title',
         	fieldLabel: 'Title'
@@ -143,9 +149,13 @@ Ext.define('CC.view.chart.Form', {
         	xtype: 'textfield',
         	name : 'ytitle',
         	fieldLabel: 'Y axis title'
+        	
       	}],
+      	
       }],
-     }], 
+      
+     }],
+      
      }, {
      	xtype: 'panel',
   		title: 'Series information',
@@ -153,32 +163,55 @@ Ext.define('CC.view.chart.Form', {
 			defaults: {
 				anchor: '100%'
 			},
-			items: [{
+			tbar: [{
 				xtype: 'button',
-				text: 'Add Serie',
+				text: 'Add Series',
 				//handler: this.addSerieTab,
 				action: 'addSerieTab',
-				margin: 5,
-			}, {
-      //Serie configuration - tabbed panel
-      xtype:'tabpanel',
-      plain:true,
-      activeTab: 0,
-      defaults: {
+			}],
+			items: [{
+      	//Serie configuration - tabbed panel
+      	xtype:'tabpanel',
+      	plain:true,
+      	activeTab: 0,
+      	defaults: {
 				bodyPadding: 5
 			},
-			}]
-		 }],
-		 }];
+			}],
+		}],
+	}];
     
+    /*
     this.buttons = [{
       text: 'Save',
-      action: 'save' //action defined in controller => CreateOrUpdate
+      action: 'save'
     }, {
       text: 'Cancel',
       scope: this,
       handler: this.close
     }];
+    */
+    
+    this.saveChartButton = new Ext.Button({
+      text: 'Save',
+      action: 'save', //action defined in controller => CreateOrUpdate
+      height: 30,
+      width: 60,
+    });
+    
+    this.cancelButton = new Ext.Button({
+      text: 'Cancel',
+      scope: this,
+      handler: this.close,
+      height: 30,
+      width: 60,
+    });
+    
+    this.bbar = [
+    	{ xtype: 'tbfill' }, //empty element with flex: 1 -> buttons will be aligned to right
+    	this.saveChartButton, 
+    	this.cancelButton, 
+    ];
     
     this.callParent(arguments);
     this.setFieldsToDefaults();
@@ -269,7 +302,7 @@ Ext.define('CC.view.chart.Form', {
 				}],
 				}],
 				}, {
-      	
+      	/*
       	xtype:'fieldset',
 				title: 'Series data',
 				layout: 'anchor',
@@ -278,12 +311,15 @@ Ext.define('CC.view.chart.Form', {
 				defaults: {
 					anchor: '100%'
 				},
+				items: [{
+				*/
+        	xtype: 'writable_grid',
+					title: 'Data',
+					flex: 1,
+					width: 500,
+					store: writableGridStore,
+				//}],
 				
-        xtype: 'writable_grid',
-				title: 'Data',
-				flex: 1,
-				width: 500,
-				store: writableGridStore,
 				/*
         listeners: {
 					selectionchange: function(selModel, selected) {

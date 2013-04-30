@@ -19,5 +19,7 @@
 
 # Ignore extjs4 framework - too big
 /vendor/assets/javascripts/extjs4
+/vendor/assets/javascripts/Highcharts
+/vendor/assets/javascripts/jquery-1.7.2.min.js
 /vendor/assets/stylesheets/extjs4
 /public/Chart

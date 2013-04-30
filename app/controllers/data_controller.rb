@@ -7,7 +7,8 @@ class DataController < ApplicationController
   def index
   	data_set = DataSet.find(params[:data_set_id])
     data = data_set.data.all
-
+		data.sort_by! { |a| (a.x_field.to_i) }
+		
     respond_with(data) do |format|
     	#response string in specified format
       format.json { render json: { success: true, data: data } }

@@ -7,16 +7,20 @@ Ext.define('CC.view.chart.WritableGrid', {
         'Ext.form.field.Text',
         'Ext.toolbar.TextItem',
     ],
-		
 
     initComponent: function(){
 
         this.editing = Ext.create('Ext.grid.plugin.CellEditing');
+        
 
         Ext.apply(this, {
             //iconCls: 'icon-grid',
             frame: true,
             plugins: [this.editing],
+            collapsible: true,
+            collapsed: false,
+            maxHeight: 350,
+            loadMask: true,
             dockedItems: [{
                 xtype: 'toolbar',
                 items: [{
@@ -32,7 +36,8 @@ Ext.define('CC.view.chart.WritableGrid', {
                     scope: this,
                     handler: this.onDeleteClick
                 }]
-            }, {
+            },
+            /* {
                 weight: 2,
                 xtype: 'toolbar',
                 dock: 'bottom',
@@ -78,7 +83,8 @@ Ext.define('CC.view.chart.WritableGrid', {
                     scope: this,
                     handler: this.onSync
                 }]
-            }],
+            }
+            */],
             columns: [{
                 text: 'ID',
                 width: 40,
@@ -104,23 +110,12 @@ Ext.define('CC.view.chart.WritableGrid', {
             }],
         });
         
-        this.buttons = [{
-      		text: 'Save data',
-      		action: 'save_data',
-      		sender_grid: this
-    		}];
-        
         this.callParent();
         this.getSelectionModel().on('selectionchange', this.onSelectChange, this);
     },
     
     onSelectChange: function(selModel, selections){
         this.down('#delete').setDisabled(selections.length === 0);
-    },
-
-
-    onSync: function(){
-        //this.store.sync();
     },
     
     onDeleteClick: function(){
@@ -141,22 +136,4 @@ Ext.define('CC.view.chart.WritableGrid', {
             column: 1
         });
     }
-    
-    /*
-    createDataSetStore: function(){
-        for (; i < 20; ++i) {
-            name = this.getUniqueName(usedNames);
-            data.push({
-                firstName: name[0],
-                lastName: name[1],
-                employeeNo: this.getEmployeeNo(),
-                department: this.getDepartment()
-            });
-        }
-        return new Ext.data.Store({
-            model: KitchenSink.model.grid.Employee,
-            data: data
-        });
-    },
-    */
 });

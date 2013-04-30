@@ -7,7 +7,7 @@ Ext.define('CC.store.Data', {
   autoSync: false,
 
 	storeId: 'data',
-
+	
 	//for debuging
   listeners: {
     load: function(store, records, index, eOpts) {
@@ -34,6 +34,7 @@ Ext.define('CC.store.Data', {
   },
   
     
+  //proxy needs to be specified here, not in model, so every instance of this store has its own proxy and not sharing one common (would cause troubles when updating data for more data sets -> the proxy url would be common for all data)
   proxy: {
     url: '/data_sets/1/data',	//should be in this format - charts id needs to be dynamically changed
     type: 'rest',
@@ -56,6 +57,12 @@ Ext.define('CC.store.Data', {
       */
     },
     
+    /*
+    sorters: [{
+			property: 'x_field',
+			direction: 'ASC'
+		}],
+    */
     //need to override build Url method - when creating datum, it was sending id = 0, now its ok-not sending id at all
     buildUrl: function(request) {
     	var records = request.operation.records || [],
