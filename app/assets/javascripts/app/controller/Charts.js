@@ -17,17 +17,24 @@ Ext.define('CC.controller.Charts', {
     this.control({
       'chart_tree': {
       	//itemclick: this.loadAll,
-        itemdblclick: this.editChart,
+        //itemdblclick: this.editChart,
+        itemdblclick: this.loadAll,
         selectionchange: this.selectionChange
       },
       'writable_grid button[action=save_data]': {
       	click: this.saveData
       },
-      'tabpanel': {
-        tabchange : this.onSeriesTabChange,
+      'chart_form tabpanel tabpanel': {			//catch action only for subpanel - series
+        tabchange: this.onSeriesTabChange,
+      },
+      'chart_form tabpanel tabpanel panel': {				//catch action for tab
+        beforeclose: this.onSeriesTabClose
       },
       'chart_form button[action=addSerieTab]': {
         click: this.addSerieTab
+      },
+      'chart_form button[action=generateSeriesData]': {
+        click: this.generateSeriesData
       },
       'chart_form button[action=save]': {
         click: this.createOrUpdateChart
@@ -77,6 +84,39 @@ Ext.define('CC.controller.Charts', {
 		*/
   },
   
+  
+  
+  //this will be actually done just before the tab is closed
+  onSeriesTabClose: function(tab) {
+  	var formWin = tab.up('chart_form');
+  	var firstTab = formWin.down('tabpanel').down('tabpanel').down('panel');
+    var actTab = firstTab;
+    
+    //mark data_set_id to delete (if data_set_id is set)
+  	if(tab.data_set_id != -1) {
+  		formWin.data_set_delete.push(tab.data_set_id);	//mark data_set_id to delete
+  	}
+  	//formWin.tabindex.splice(panel.tabindex, 1); //
+  	//update tabindexes on all tabs -> lower by one each that is higher than deleted tab
+  	for(var i=0; i<formWin.last_tab; i++) {
+  		if(tab.tabindex < actTab.tabindex) {
+  			actTab.tabindex--;
+  		}
+  		if(i<formWin.last_tab-1) {
+				actTab = actTab.next('panel');
+			}
+		}
+		
+		//destroy data_store for this tab
+  	this.data_stores[tab.tabindex].destroyStore();
+		this.data_stores.splice(tab.tabindex, 1); //shift data_stores
+		
+  	formWin.last_tab--;	//lower last_tab counter
+  	return true;	//true == close tab
+  },
+  
+  
+  
 	showChart: function() {
 		//show chart only if all stores are loaded
 		var all_stores_loaded = this.isStoresLoaded();
@@ -98,10 +138,14 @@ Ext.define('CC.controller.Charts', {
 			
 			switch (selectedChartType) {
 				case 'Line':
-					hcConfig = configs.getLine();
+					hcConfig = configs.getDefaultConfig();
+				break;
+				//for step use same settings as for line
+				case 'Step':
+					hcConfig = configs.getDefaultConfig();
 				break;
 				case 'Spline':
-					hcConfig = configs.getSpline();
+					hcConfig = configs.getDefaultConfig();
 				break;
 			}
 			// data inside the config
@@ -118,10 +162,11 @@ Ext.define('CC.controller.Charts', {
 			}
 			//hcConfig
 			
-			// New chart with config and id
+			//New chart with config and id
 			hcConfig.id = 'main_chart';
 			mainChart = Ext.widget('highchart', hcConfig);
 			
+			//get data from data stores and add series to chart
 			for(var i in data_stores) {
 				var data = [];
 				var n = 0;
@@ -131,11 +176,13 @@ Ext.define('CC.controller.Charts', {
 						data_set_record = set_store.findRecord('id', record.data.data_set_id);
 					}
 					data[n] = [];
-					data[n][0] = parseInt(record.data.x_field);
+					data[n][0] = parseFloat(record.data.x_field);
 					data[n][1] = record.data.data_index;
 					n++;
 				});
 				//console.log(data);
+				
+				//if record exists - build series and add to chart
 				if(data_set_record) {
 					mainChart.addSeries([{
 						name: data_set_record.data.name,
@@ -144,6 +191,7 @@ Ext.define('CC.controller.Charts', {
     				color: data_set_record.data.color,
     				dashStyle: data_set_record.data.dash_style.toLowerCase(),
     				step: (data_set_record.data.series_type == 'Step') ? true : false,
+    				events: { click: this.createChartMenu }    				
 					}], true);
 				}
 			}
@@ -151,10 +199,145 @@ Ext.define('CC.controller.Charts', {
 			/*
 			chartStore && mainChart.bindStore(chartStore, true);
 			*/
+			//bind chart to center panel and draw
 			Ext.getCmp('chart_panel').add(mainChart);
 			Ext.getCmp('main_chart').draw();
 		}
   },
+  
+  //create menu which will open on chart click
+  createChartMenu: function(evt) {
+  	chart = Ext.getCmp('main_chart');
+  	ChartCreator.menu && (ChartCreator.menu.destroy()) && (ChartCreator.menu = null);
+		ChartCreator.menu = Ext.create('Ext.menu.Menu', {
+			width: 200,
+			title: 'Series Menu',
+			margin: '0 0 10 0',
+			items: [{
+				text: 'Zoom type',
+				menu: {
+					items: [{
+						text: 'XY',
+						checked: false,
+						group: 'zoom_type',
+						showCheckbox: false,
+						handler: function() {
+							chart.chartConfig.chart.zoomType = "xy";
+							chart.draw();
+							
+						}
+					}, {
+						text: 'X',
+						checked: false,
+						group: 'zoom_type',
+						showCheckbox: false,
+						handler: function() {
+							chart.chartConfig.chart.zoomType = "x";
+							chart.draw();
+						}
+					}, {
+						text: 'Y',
+						checked: false,
+						group: 'zoom_type',
+						showCheckbox: false,
+						handler: function() {
+							chart.chartConfig.chart.zoomType = "y";
+							chart.draw();
+						}
+					}]
+				}
+			},'-',{
+				text: 'Plot Average',
+				scope: this,
+				handler: function() {
+					var average = 0;
+					Ext.each(this.points, function(point) {
+						average += point.y;
+					});
+					average = average / this.points.length;
+					this.yAxis.removePlotLine('average');
+					this.yAxis.addPlotLine({
+						id: 'average',
+						value: average,
+						width: 2,
+						dashStyle: 'dashdot',
+						color: '#80CC99',
+						label: {
+							text: 'Average: ' + average
+						}
+					});
+				}
+			}, {
+				text: 'Remove Average Plot',
+				scope: this,
+				handler: function() {
+					this.yAxis.removePlotLine('average');
+				}
+			}, '-', {
+				text: 'Cancel',
+				handler: function() {
+					ChartCreator.menu.close();
+				}
+			}]
+		});
+		
+		//check right zoom type
+		switch(chart.chartConfig.chart.zoomType) {
+			case "xy":
+				ChartCreator.menu.down('menu').down('menucheckitem').checked = true;
+				break;
+			case "x":
+				ChartCreator.menu.down('menu').down('menucheckitem').next('menucheckitem').checked = true;
+				break;
+			case "y":
+				ChartCreator.menu.down('menu').down('menucheckitem').next('menucheckitem').next('menucheckitem').checked = true;
+				break;
+		}
+		ChartCreator.menu.showAt(evt.point.pageX + 5, evt.point.pageY + 5);
+  },
+
+
+//-------------------------------------------------------------------------------------
+//generateSeriesData - get data from octave - after load the data will be shown in grid - runned from 
+//form button
+//-------------------------------------------------------------------------------------
+  generateSeriesData: function(btn) {
+  	var formWin = btn.up('chart_form');
+  	var tabPanel = btn.up('panel').down('tabpanel');
+  	var actTab = tabPanel.getActiveTab();
+  	var tabindex = actTab.tabindex;
+  	var form = actTab.down('form');
+  	var series_function = form.getForm().findField('series_function').getValue();
+  	var x_start = form.getForm().findField('x_start').getValue();
+  	var x_end = form.getForm().findField('x_end').getValue();
+  	var x_step = form.getForm().findField('x_step').getValue();
+  	var me = this;
+  	
+  	//create store to load octave data
+  	var data_store = Ext.create('CC.store.Data');
+  	data_store.getProxy().url = '/octave_data';
+  	data_store.getProxy().extraParams = { 
+  		series_function: series_function, 
+  		x_start: x_start,
+  		x_end: x_end,
+  		x_step: x_step,
+  	};
+  	
+		//create temp store where will be all records copied to, only after that send data to grid store
+		//this will enourmously speed up the loading, at the destroy unneeded stores
+		var temp_store = Ext.create('CC.store.Data');
+		me.data_stores[tabindex].loadData([],false); //drop local store, dont send changes to server
+		data_store.load(function () {
+			data_store.data.each(function(record){
+  			temp_store.add(record.copy());
+			});
+			me.data_stores[tabindex].add(temp_store.getRange());
+			temp_store.destroyStore();
+			data_store.destroyStore();
+		});
+  },
+  
+
 
 //-------------------------------------------------------------------------------------
 //addSerieTab - actual form
@@ -198,19 +381,19 @@ Ext.define('CC.controller.Charts', {
 	},
 	
 //-------------------------------------------------------------------------------------
-//isStoresLoaded - check if all stores are loaded and return true/false accordingly
+//isStoresLoaded - check if all stores are loaded and return true/false accordingly -before show chart
 //-------------------------------------------------------------------------------------
 	isStoresLoaded: function() {
 		//get selected record from grid - show this chart
 		var chart_record = Ext.getCmp('chart_tree').getSelectedChart();
 		
-		//first check if all stores finished loading
 		var chart_store = this.getStore('Charts');
 		var details_store = this.getStore('Details');
 		var set_store = this.getStore('DataSets');
 		var data_stores = this.data_stores;
 		var all_stores_loaded = true;
 		
+		//check if all stores finished loading
 		if(chart_store.isLoading()) {
 			//console.log("chart_store is loading");
 			all_stores_loaded = false;
@@ -281,8 +464,6 @@ Ext.define('CC.controller.Charts', {
 					form = me.addSerieTab(addSerieBtn);
 					form.getForm().loadRecord(record);
 					form.up('panel').data_set_id = record.data.id;
-					var tabindex = form.up('panel').tabindex;
-					var data_set_id = form.up('panel').data_set_id;
 				}
 				//load data stores (writable grid would update automatically
 				if(!me.data_stores[record_num]) {
@@ -332,6 +513,9 @@ Ext.define('CC.controller.Charts', {
 //createOrUpdateChart - after save button on form - create/update store and db
 //-------------------------------------------------------------------------------------
   createOrUpdateChart: function(button) {
+  
+  	Ext.getCmp('chart_tree').disableAllButtons(); //when data are saving, disable all buttons from tree
+  	
 		var formWin = button.up('window');
 		
 		//these are checked in the end if the window can be closed
@@ -355,7 +539,7 @@ Ext.define('CC.controller.Charts', {
     var chart = Ext.create('CC.model.Chart', chart_values);
     var chart_id = 0; //when chart is created id, returned id is saved -for creation od nested data
     errors[0] = chart.validate();
-    if(!errors[0].isValid) {
+    if(!errors[0].isValid()) {
 			all_valid = false;
 		}
     
@@ -364,7 +548,7 @@ Ext.define('CC.controller.Charts', {
     var details_values = detailsForm.getValues();
     var details = Ext.create('CC.model.Detail', details_values);
     errors[1] = details.validate();
-    if(!errors[1].isValid) {
+    if(!errors[1].isValid()) {
 			all_valid = false;
 		}
     
@@ -387,7 +571,7 @@ Ext.define('CC.controller.Charts', {
 			}
 			data_sets[i] = Ext.create('CC.model.DataSet', set_values[i]);
 			errors[2][i] = data_sets[i].validate();
-			if(!errors[2][i].isValid) {
+			if(!errors[2][i].isValid()) {
 				all_valid = false;
 			}
 		}
@@ -431,16 +615,23 @@ Ext.define('CC.controller.Charts', {
       }
       
       //set data
-      //if record exists - only update record
+      //if record exists - only update record + delete records for which does not exist any tab
       for(var i=0; i<formWin.last_tab; i++) {
       	if(setRecord[i]) {
-        	setRecord[i].set(set_values[i]);	//update set data
-        	setRecord[i].setDirty();
+      		setRecord[i].set(set_values[i]);	//update set data
+        	setRecord[i].setDirty();	//mark dirty to be sure that nested data are saved
       	//else - create record - add it to store
       	} else {
         	set_store.add(data_sets[i]);
       	}
       }
+
+			//delete set data for which the tab was closed
+			for(var i in formWin.data_set_delete) {
+				delete_record = set_store.findRecord('id', formWin.data_set_delete[i]);
+				set_store.remove(delete_record);
+				//console.log(delete_record.data);
+			}
 
 			//------------------------------------------------------------------------
 			//synchronize chart_store - update/create and close window
@@ -501,6 +692,9 @@ Ext.define('CC.controller.Charts', {
         			//details_store success
         			success: function(set_batch, set_options) {
           			//console.log("success");
+          			//after delete of stores - delete data_sets to be removed
+          			formWin.data_set_delete.length = 0;	
+          			
           			//after set_store is synced - get new set id
         				if(set_options.operations.create)
         				{
@@ -531,6 +725,15 @@ Ext.define('CC.controller.Charts', {
         					//console.log(data_stores[i].getProxy().url);
         					data_stores[i].sync({
 										success: function(data_batch, data_options) {
+											//after last data store is saved - show chart
+											if(i==formWin.last_tab) {
+												//get created/updated record, select it and show chart
+												act_record = chart_store.findRecord('id', chart_id);
+												Ext.getCmp('chart_tree').getSelectionModel().select(act_record);
+												me.showChart();
+												//after success, enable all buttons
+												Ext.getCmp('chart_tree').enableAllButtons();
+											}
 										},
 										failure: function(data_batch, data_options) {
 										},
@@ -566,8 +769,10 @@ Ext.define('CC.controller.Charts', {
         	}
         	
         	formWin.close();
-        	
-        	me.showChart();
+        	if(me.isStoresLoaded) {
+        		Ext.getCmp('chart_tree').enableAllButtons();
+        	}
+        	//me.showChart();
        	},
        	//chart_store failure
         failure: function(batch, options) {

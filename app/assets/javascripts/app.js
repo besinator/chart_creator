@@ -24,6 +24,8 @@ Ext.require('Chart.ux.Highcharts.ScatterSerie');
 Ext.require('Chart.ux.Highcharts.SplineSerie');
 Ext.require('Chart.ux.Highcharts.WaterfallSerie');
 
+Ext.ns("ChartCreator");
+
 //Instance of application
 Ext.application({
   //global namespace - chart manager

@@ -20,10 +20,13 @@ Ext.define('CC.view.Viewport', {
     id: 'chart_panel',
     //html : 'Blank',
     bbar: [{
+    	xtype: 'tbfill',
+    	height: 22,
+    },/*{
     	text: 'Add Series',
 			id: 'addSeries',
 			action: 'addSeries',
 			disabled: true,
-    }]
+    }*/]
   }]
 });

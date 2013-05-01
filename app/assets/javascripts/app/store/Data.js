@@ -6,7 +6,7 @@ Ext.define('CC.store.Data', {
   autoLoad: false,
   autoSync: false,
 
-	storeId: 'data',
+	//storeId: 'data',
 	
 	//for debuging
   listeners: {
@@ -30,7 +30,7 @@ Ext.define('CC.store.Data', {
     },
     add: function(store, records, index, eOpts) {
       //console.log(records);
-    }
+    },
   },
   
     
@@ -40,7 +40,7 @@ Ext.define('CC.store.Data', {
     type: 'rest',
     format: 'json',
     //appendId: false,
-
+		batchActions: true,
     reader: {
       root: 'data',
       //record: 'detail',

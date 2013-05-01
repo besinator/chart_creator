@@ -6,7 +6,7 @@ Ext.define('CC.store.Details', {
   autoLoad: false,
   autoSync: false,
 
-	storeId: 'details',
+	//storeId: 'details',
 
 	//for debuging
   listeners: {

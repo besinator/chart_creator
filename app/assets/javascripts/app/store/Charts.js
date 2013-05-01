@@ -6,7 +6,7 @@ Ext.define('CC.store.Charts', {
   autoLoad: true,
   autoSync: false,
 
-	storeId: 'charts',
+	//storeId: 'charts',
 	
 	//for debuging
   listeners: {

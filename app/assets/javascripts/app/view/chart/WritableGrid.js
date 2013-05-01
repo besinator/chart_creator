@@ -19,7 +19,7 @@ Ext.define('CC.view.chart.WritableGrid', {
             plugins: [this.editing],
             collapsible: true,
             collapsed: false,
-            maxHeight: 350,
+            maxHeight: 300,
             loadMask: true,
             dockedItems: [{
                 xtype: 'toolbar',
@@ -85,13 +85,13 @@ Ext.define('CC.view.chart.WritableGrid', {
                 }]
             }
             */],
-            columns: [{
+            columns: [/*{
                 text: 'ID',
                 width: 40,
                 hidden: true,
                 sortable: true,
                 dataIndex: 'id'
-            }, {
+            }, */{
                 header: 'X',
                 flex: 1,
                 sortable: true,

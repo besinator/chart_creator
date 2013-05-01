@@ -15,6 +15,8 @@ ChartCreator::Application.routes.draw do
 		resources :data
 	end
 	
+	resources :octave_data
+	
   root to: 'index#index'
   
 

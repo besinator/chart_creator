@@ -6,7 +6,7 @@ Ext.define('CC.store.DataSets', {
   autoLoad: false,
   autoSync: false,
 
-	storeId: 'data_sets',
+	//storeId: 'data_sets',
 
 	//for debuging
   listeners: {

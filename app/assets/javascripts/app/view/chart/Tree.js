@@ -68,5 +68,19 @@ Ext.define('CC.view.chart.Tree' ,{
   	this.showChartButton.disable();
     this.editChartButton.disable();
     this.deleteChartButton.disable();
+  },
+  
+  enableAllButtons: function() {
+  	this.showChartButton.enable();
+    this.editChartButton.enable();
+    this.deleteChartButton.enable();
+    this.addChartButton.enable();
+  },
+
+  disableAllButtons: function() {
+  	this.showChartButton.disable();
+    this.editChartButton.disable();
+    this.deleteChartButton.disable();
+    this.addChartButton.disable();
   }
 });

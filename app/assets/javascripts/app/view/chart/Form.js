@@ -9,17 +9,18 @@ Ext.define('CC.view.chart.Form', {
 	},
   autoShow: true,
   
+  //maxHeight: 600,
   y: 50,
   
   combo_chart_types: [
   	'Line',
   	'Spline',
 		'Step',
-		'Area',
-		'Bar',
-		'Column',
-		'Scatter',
-		'Funnel',
+	//	'Area',
+	//	'Bar',
+	//	'Column',
+	//	'Scatter',
+	//	'Funnel',
 	],
 	
 	combo_dash_styles: [
@@ -50,10 +51,12 @@ Ext.define('CC.view.chart.Form', {
 		'#A6C96A'
   ],
 
-	last_tab: 0,
+	last_tab: 0,	//last tab number
+	data_set_delete: [],
 	
 	initComponent: function() {
-
+		var required = '<span style="color:red;font-weight:bold" data-qtip="Required">*</span>';
+		
     this.items = [{
     
     xtype:'tabpanel',
@@ -98,6 +101,7 @@ Ext.define('CC.view.chart.Form', {
 					xtype: 'textfield',
 					name : 'name',
 					fieldLabel: 'Name',
+					afterLabelTextTpl: required,
       	}, {
 					xtype: 'textfield',
 					name : 'group',
@@ -163,11 +167,18 @@ Ext.define('CC.view.chart.Form', {
 			defaults: {
 				anchor: '100%'
 			},
+			minHeight: 200,
+			minWidth: 500,
 			tbar: [{
 				xtype: 'button',
 				text: 'Add Series',
 				//handler: this.addSerieTab,
 				action: 'addSerieTab',
+			},{
+				xtype: 'button',
+				text: 'Generate data',
+				//handler: this.addSerieTab,
+				action: 'generateSeriesData',
 			}],
 			items: [{
       	//Serie configuration - tabbed panel
@@ -232,6 +243,12 @@ Ext.define('CC.view.chart.Form', {
 		*/
 	},
 	
+	/*
+	onTabClose: function(args) {
+		console.log('trying to close tab');
+		return false;
+	},
+	*/
 	//add tab for new serie
 	addSerieTab: function(writableGridStore) {
 		//console.log(this.up('chart_form').down('tabpanel'));
@@ -254,12 +271,13 @@ Ext.define('CC.view.chart.Form', {
   		xtype: 'panel',
   		title: 'Series '+(win.last_tab),
   		layout: 'anchor',
+  		closable: true,
 			defaults: {
 				anchor: '100%'
 			},
 			//help identify data to load/save to/from writable grid
 			data_set_id: -1,
-			tabindex: win.last_tab, //particulary important for addChart
+			tabindex: win.last_tab-1, //particulary important for delete Series
 			items:[{
 				xtype: 'form',
       	//title: 'Chart Form',
@@ -278,6 +296,7 @@ Ext.define('CC.view.chart.Form', {
 					anchor: '100%'
 				},
 				items: [{
+				
 					xtype: 'textfield',
 					name : 'name',
 					fieldLabel: 'Name'
@@ -299,7 +318,43 @@ Ext.define('CC.view.chart.Form', {
 					xtype: 'colorcbo',
 					name : 'color',
 					fieldLabel: 'Color'
-				}],
+				},]
+				}, {
+				
+				xtype:'fieldset',
+				title: 'Data generation',
+				layout: 'anchor',
+				collapsible: true,
+				collapsed: false,
+				defaults: {
+					anchor: '100%'
+				},
+				
+				items: [{
+					xtype: 'textfield',
+					name : 'series_function',
+					fieldLabel: 'Series function',
+					value: 'sin(x)./x',
+					//value: 'x',
+				}, {
+					xtype: 'textfield',
+					name : 'x_start',
+					fieldLabel: 'X range start',
+					value: '-10.*pi',
+					//value: '1',
+				}, {
+					xtype: 'textfield',
+					name : 'x_end',
+					fieldLabel: 'X range end',
+					value: '10.*pi',
+					//value: '5',
+				}, {
+					xtype: 'numberfield',
+					name : 'x_step',
+					fieldLabel: 'X step',
+					value: '0.2',
+				}
+				],
 				}],
 				}, {
       	/*
