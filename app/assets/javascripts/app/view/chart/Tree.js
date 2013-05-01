@@ -2,10 +2,24 @@ Ext.define('CC.view.chart.Tree' ,{
   extend: 'Ext.grid.Panel',
   alias : 'widget.chart_tree',
 
-  title : 'Charts',
+	requires: [
+		'Ext.grid.feature.Grouping'
+	],
+
+  //title : 'Charts',
   store: 'Charts',
 
+	features: [{
+		ftype: 'grouping',
+		groupHeaderTpl: '{columnName}: {name} ({rows.length} Item{[values.rows.length > 1 ? "s" : ""]})',
+		hideGroupedHeader: true,
+		startCollapsed: true,
+		id: 'chartGrouping'
+	}],
+
   initComponent: function() {
+
+  	
     this.columns = [
     	{ header: 'Id',  dataIndex: 'id',  flex: 1, hidden: true },
       { header: 'Name',  dataIndex: 'name',  flex: 1 },
@@ -82,5 +96,25 @@ Ext.define('CC.view.chart.Tree' ,{
     this.editChartButton.disable();
     this.deleteChartButton.disable();
     this.addChartButton.disable();
-  }
+  },
+  
+  onClearGroupingClick: function(){
+		this.groupingFeature.disable();
+	},
+
+	toggleGroup: function(item) {
+		
+	},
+
+	onGroupChange: function(store, groupers) {
+		
+	},
+
+	onGroupCollapse: function(v, n, groupName) {
+		
+	},
+
+	onGroupExpand: function(v, n, groupName) {
+		
+	}
 });

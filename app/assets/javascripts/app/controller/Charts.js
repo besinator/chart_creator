@@ -575,7 +575,6 @@ Ext.define('CC.controller.Charts', {
 				all_valid = false;
 			}
 		}
-
 		//------------------------------------------------------------------
 		//store records
 		//------------------------------------------------------------------
@@ -632,7 +631,6 @@ Ext.define('CC.controller.Charts', {
 				set_store.remove(delete_record);
 				//console.log(delete_record.data);
 			}
-
 			//------------------------------------------------------------------------
 			//synchronize chart_store - update/create and close window
 			//------------------------------------------------------------------------
@@ -640,7 +638,6 @@ Ext.define('CC.controller.Charts', {
       	//chart_store success
         success: function(batch, options) {
         	//console.log("success");
-        	
         	//after chart_store is synced - get returned chart id
         	if(options.operations.create)
         	{
@@ -813,7 +810,6 @@ Ext.define('CC.controller.Charts', {
 //-------------------------------------------------------------------------------------
   deleteChart: function() {
     var record = Ext.getCmp('chart_tree').getSelectedChart();
-
     if (record) {
       var store = this.getStore('Charts');
       store.remove(record);

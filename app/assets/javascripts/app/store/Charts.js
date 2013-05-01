@@ -6,6 +6,8 @@ Ext.define('CC.store.Charts', {
   autoLoad: true,
   autoSync: false,
 
+	groupField: 'group', //used with grid to group by
+
 	//storeId: 'charts',
 	
 	//for debuging
