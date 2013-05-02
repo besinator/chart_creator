@@ -202,7 +202,7 @@ Ext.define('CC.controller.Charts', {
 				}
 			}
 			if(selectedChartType == "Column" || selectedChartType == "Bar") {
-				$.unique(categories);	//will remove all values that are not unique
+				//$.unique(categories);	//will remove all values that are not unique
 				mainChart.chartConfig.xAxis[0].categories = categories;
 			}
 			//mainChart.draw();
