@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130428174348) do
+ActiveRecord::Schema.define(:version => 20130501173021) do
 
   create_table "admins", :force => true do |t|
     t.string   "email",                  :default => "", :null => false
@@ -54,8 +54,12 @@ ActiveRecord::Schema.define(:version => 20130428174348) do
     t.string   "series_type"
     t.string   "dash_style"
     t.string   "color"
-    t.datetime "created_at",  :null => false
-    t.datetime "updated_at",  :null => false
+    t.datetime "created_at",      :null => false
+    t.datetime "updated_at",      :null => false
+    t.string   "series_function"
+    t.float    "x_start"
+    t.float    "x_end"
+    t.float    "x_step"
   end
 
   create_table "details", :force => true do |t|

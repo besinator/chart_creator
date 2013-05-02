@@ -7,7 +7,7 @@ Ext.define('CC.view.Viewport', {
     xtype: 'chart_tree',
     title: 'Chart list',
     id: 'chart_tree',
-    width: 230,
+    width: 260,
     collapsible: true,
     html : 'Treeview of charts'
   },

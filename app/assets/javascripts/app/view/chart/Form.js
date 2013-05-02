@@ -1,6 +1,7 @@
 Ext.define('CC.view.chart.Form', {
   extend: 'Ext.window.Window',
   alias : 'widget.chart_form',
+	requires: ['CC.view.chart.ColorPickerCombo'],
 	
   title : 'Add / Edit Chart',
   layout: 'anchor',
@@ -10,46 +11,11 @@ Ext.define('CC.view.chart.Form', {
   autoShow: true,
   
   //maxHeight: 600,
-  y: 50,
+  y: 25,
   
-  combo_chart_types: [
-  	'Line',
-  	'Spline',
-		'Step',
-	//	'Area',
-	//	'Bar',
-	//	'Column',
-	//	'Scatter',
-	//	'Funnel',
-	],
-	
-	combo_dash_styles: [
-		'Solid',
-		'ShortDash',
-		'ShortDot',
-		'ShortDashDot',
-		'ShortDashDotDot',
-		'Dot',
-		'Dash',
-		'LongDash',
-		'DashDot',
-		'LongDashDot',
-		'LongDashDotDot'
-  ],
-  
-  //same as highcharts default colors
-  default_colors: [
-		'#2F7ED8', 
-		'#0D233A', 
-		'#8BBC21', 
-		'#910000', 
-		'#1AADCE', 
-		'#492970',
-		'#F28F43', 
-		'#77A1E5', 
-		'#C42525', 
-		'#A6C96A'
-  ],
+  combo_chart_types: CC.Variables.chart_types,
+	combo_dash_styles: CC.Variables.dash_styles,
+  default_colors: CC.Variables.default_colors,
 
 	last_tab: 0,	//last tab number
 	data_set_delete: [],
@@ -113,8 +79,8 @@ Ext.define('CC.view.chart.Form', {
         	displayField: 'name',
         	store: this.combo_chart_types,
         	queryMode: 'local',
-        	typeAhead: true
-        	
+        	typeAhead: true,
+        	afterLabelTextTpl: required,
       	}],
       	
       }]
@@ -232,7 +198,9 @@ Ext.define('CC.view.chart.Form', {
 	setFieldsToDefaults:  function() {
 	
 		var form = this.down('form');
-		form.getForm().findField('chart_type').setValue(this.combo_chart_types[0]);
+		if(form.getForm().findField('chart_type')) {
+			form.getForm().findField('chart_type').setValue(this.combo_chart_types[0]);
+		}
 
 /*
 		form = this.down('tabpanel').down('form');
@@ -300,24 +268,26 @@ Ext.define('CC.view.chart.Form', {
 					xtype: 'textfield',
 					name : 'name',
 					fieldLabel: 'Name'
-				}, {
+				}, /*{
 					xtype: 'combo',
 					name : 'series_type',
 					fieldLabel: 'Series type',
 					store: win.combo_chart_types,
 					queryMode: 'local',
 					typeAhead: true
-				}, {
+				}*/, {
 					xtype: 'combo',
 					name : 'dash_style',
 					fieldLabel: 'Dash style',
 					store: win.combo_dash_styles,
 					queryMode: 'local',
-					typeAhead: true
+					typeAhead: true,
+					value: win.combo_dash_styles[0],
 				}, {
 					xtype: 'colorcbo',
 					name : 'color',
-					fieldLabel: 'Color'
+					fieldLabel: 'Color',
+					value: win.default_colors[win.last_tab % win.default_colors.length],
 				},]
 				}, {
 				
@@ -337,16 +307,16 @@ Ext.define('CC.view.chart.Form', {
 					value: 'sin(x)./x',
 					//value: 'x',
 				}, {
-					xtype: 'textfield',
+					xtype: 'numberfield',
 					name : 'x_start',
 					fieldLabel: 'X range start',
-					value: '-10.*pi',
+					value: '-20',
 					//value: '1',
 				}, {
-					xtype: 'textfield',
+					xtype: 'numberfield',
 					name : 'x_end',
 					fieldLabel: 'X range end',
-					value: '10.*pi',
+					value: '20',
 					//value: '5',
 				}, {
 					xtype: 'numberfield',
@@ -391,10 +361,13 @@ Ext.define('CC.view.chart.Form', {
 		{
 			form = form.up('panel').next('panel').down('form');
 		}
-		form.getForm().findField('series_type').setValue(win.combo_chart_types[0]);
+		if(form.getForm().findField('series_type')) {
+			form.getForm().findField('series_type').setValue(win.combo_chart_types[0]);
+		}
+		/*
 		form.getForm().findField('dash_style').setValue(win.combo_dash_styles[0]);
 		form.getForm().findField('color').setValue(win.default_colors[win.last_tab % win.default_colors.length]);
-		
+		*/
 		//set added tab as active		
 		tab_panel.setActiveTab(new_serie_panel);
 		//tab_panel.doLayout();

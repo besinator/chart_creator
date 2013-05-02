@@ -58,35 +58,14 @@ Ext.define('CC.controller.Charts', {
 //on tab change - load new data to grid
 //-------------------------------------------------------------------------------------
 	onSeriesTabChange: function(panel, newTab, oldTab) {
-	/*
-		if(newTab.data_set_id>0) {
-			console.log(newTab.data_set_id);
-		}
-		*/
 		/*
-		if(newTab.data_set_id>0) {
-			if(!this.data_stores[newTab.data_set_id])
-			{
-				this.data_stores[newTab.data_set_id] = Ext.create('CC.store.Data');
-				this.data_stores[newTab.data_set_id].getProxy().url = '/data_sets/'+newTab.data_set_id+'/data';
-				this.data_stores[newTab.data_set_id].load();
-			}
-			console.log(this.data_stores);
-			console.log(newTab.data_set_id);
-  	}
-  	*/
-  	/*
-		if(newTab.data_set_id>0) {
-			data_store = Ext.getStore('Data');
-			data_store.getProxy().url = '/data_sets/'+newTab.data_set_id+'/data';
-			data_store.load();
-		}
 		*/
   },
   
   
-  
-  //this will be actually done just before the tab is closed
+//-------------------------------------------------------------------------------------
+//onSeriesTabClose - this will be actually done just before the tab is closed
+//-------------------------------------------------------------------------------------
   onSeriesTabClose: function(tab) {
   	var formWin = tab.up('chart_form');
   	var firstTab = formWin.down('tabpanel').down('tabpanel').down('panel');
@@ -116,7 +95,9 @@ Ext.define('CC.controller.Charts', {
   },
   
   
-  
+//-------------------------------------------------------------------------------------
+//showChart - draw chart to centerer panel (checking if all stores all loaded first)
+//-------------------------------------------------------------------------------------  
 	showChart: function() {
 		//show chart only if all stores are loaded
 		var all_stores_loaded = this.isStoresLoaded();
@@ -140,12 +121,23 @@ Ext.define('CC.controller.Charts', {
 				case 'Line':
 					hcConfig = configs.getDefaultConfig();
 				break;
-				//for step use same settings as for line
 				case 'Step':
 					hcConfig = configs.getDefaultConfig();
 				break;
 				case 'Spline':
 					hcConfig = configs.getDefaultConfig();
+				break;
+				case 'Area':
+					hcConfig = configs.getDefaultConfig();
+				break;
+				case 'Areaspline':
+					hcConfig = configs.getDefaultConfig();
+				break;
+				case 'Column':
+					hcConfig = configs.getColumnBarConfig();
+				break;
+				case 'Bar':
+					hcConfig = configs.getColumnBarConfig();
 				break;
 			}
 			// data inside the config
@@ -166,9 +158,11 @@ Ext.define('CC.controller.Charts', {
 			hcConfig.id = 'main_chart';
 			mainChart = Ext.widget('highchart', hcConfig);
 			
+			var categories = [];
 			//get data from data stores and add series to chart
 			for(var i in data_stores) {
 				var data = [];
+				var categories = [];
 				var n = 0;
 				var data_set_record;
 				data_stores[i].data.each(function(record, index, totalItems ) {
@@ -176,8 +170,20 @@ Ext.define('CC.controller.Charts', {
 						data_set_record = set_store.findRecord('id', record.data.data_set_id);
 					}
 					data[n] = [];
-					data[n][0] = parseFloat(record.data.x_field);
-					data[n][1] = record.data.data_index;
+					if(selectedChartType == "Spline" 
+						|| selectedChartType == "Line" 
+						|| selectedChartType == "Step"
+						|| selectedChartType == "Area"
+						|| selectedChartType == "Areaspline") 
+					{
+						data[n] = [];
+						data[n][0] = parseFloat(record.data.x_field);
+						data[n][1] = record.data.data_index;
+					}
+					else {
+						categories.push(record.data.x_field);
+						data[n] = record.data.data_index;
+					}
 					n++;
 				});
 				//console.log(data);
@@ -187,13 +193,17 @@ Ext.define('CC.controller.Charts', {
 					mainChart.addSeries([{
 						name: data_set_record.data.name,
     				data: data,
-    				type: (data_set_record.data.series_type == 'Step') ? 'line' : data_set_record.data.series_type.toLowerCase(),
+    				type: (selectedChartType == 'Step') ? 'line' : selectedChartType.toLowerCase(),
     				color: data_set_record.data.color,
     				dashStyle: data_set_record.data.dash_style.toLowerCase(),
-    				step: (data_set_record.data.series_type == 'Step') ? true : false,
+    				step: (selectedChartType == 'Step') ? true : false,
     				events: { click: this.createChartMenu }    				
 					}], true);
 				}
+			}
+			if(selectedChartType == "Column" || selectedChartType == "Bar") {
+				$.unique(categories);	//will remove all values that are not unique
+				mainChart.chartConfig.xAxis[0].categories = categories;
 			}
 			//mainChart.draw();
 			/*
@@ -202,10 +212,13 @@ Ext.define('CC.controller.Charts', {
 			//bind chart to center panel and draw
 			Ext.getCmp('chart_panel').add(mainChart);
 			Ext.getCmp('main_chart').draw();
+			//console.log(Ext.getCmp('main_chart'));
 		}
   },
-  
-  //create menu which will open on chart click
+
+//-------------------------------------------------------------------------------------
+//createChartMenu - create menu which will open on chart click
+//-------------------------------------------------------------------------------------    
   createChartMenu: function(evt) {
   	chart = Ext.getCmp('main_chart');
   	ChartCreator.menu && (ChartCreator.menu.destroy()) && (ChartCreator.menu = null);
@@ -224,7 +237,6 @@ Ext.define('CC.controller.Charts', {
 						handler: function() {
 							chart.chartConfig.chart.zoomType = "xy";
 							chart.draw();
-							
 						}
 					}, {
 						text: 'X',
@@ -281,7 +293,7 @@ Ext.define('CC.controller.Charts', {
 			}]
 		});
 		
-		//check right zoom type
+		//check actual zoom type in submenu
 		switch(chart.chartConfig.chart.zoomType) {
 			case "xy":
 				ChartCreator.menu.down('menu').down('menucheckitem').checked = true;
@@ -307,34 +319,40 @@ Ext.define('CC.controller.Charts', {
   	var actTab = tabPanel.getActiveTab();
   	var tabindex = actTab.tabindex;
   	var form = actTab.down('form');
-  	var series_function = form.getForm().findField('series_function').getValue();
-  	var x_start = form.getForm().findField('x_start').getValue();
-  	var x_end = form.getForm().findField('x_end').getValue();
-  	var x_step = form.getForm().findField('x_step').getValue();
   	var me = this;
   	
-  	//create store to load octave data
-  	var data_store = Ext.create('CC.store.Data');
-  	data_store.getProxy().url = '/octave_data';
-  	data_store.getProxy().extraParams = { 
-  		series_function: series_function, 
-  		x_start: x_start,
-  		x_end: x_end,
-  		x_step: x_step,
-  	};
+  	var set_values = form.getValues();
   	
+  	//check if values from form are valid
+  	var data_set = Ext.create('CC.model.DataSet', set_values);
+    var errors = data_set.validate();
+    if(!errors.isValid()) {
+    	form.getForm().markInvalid(errors);
+		}
+		//only if are valid -> generate data
+		else {
+  		//create store to load octave data
+  		var data_store = Ext.create('CC.store.Data');
+  		data_store.getProxy().url = '/octave_data';
+  		data_store.getProxy().extraParams = { 
+  			series_function: set_values.series_function, 
+  			x_start: set_values.x_start,
+  			x_end: set_values.x_end,
+  			x_step: set_values.x_step,
+  		};
 		//create temp store where will be all records copied to, only after that send data to grid store
-		//this will enourmously speed up the loading, at the destroy unneeded stores
-		var temp_store = Ext.create('CC.store.Data');
-		me.data_stores[tabindex].loadData([],false); //drop local store, dont send changes to server
-		data_store.load(function () {
-			data_store.data.each(function(record){
-  			temp_store.add(record.copy());
+		//temp store will enourmously speed up the loading, at the end destroy unneeded stores
+			var temp_store = Ext.create('CC.store.Data');
+			me.data_stores[tabindex].removeAll(); //first remove all records - and update db
+			data_store.load(function () {
+				data_store.data.each(function(record){
+  				temp_store.add(record.copy());
+				});
+				me.data_stores[tabindex].add(temp_store.getRange());
+				temp_store.destroyStore();
+				data_store.destroyStore();
 			});
-			me.data_stores[tabindex].add(temp_store.getRange());
-			temp_store.destroyStore();
-			data_store.destroyStore();
-		});
+		}
   },
   
 
@@ -805,6 +823,10 @@ Ext.define('CC.controller.Charts', {
 					}
       	}
       }
+      var chartRecord = chartForm.getRecord();
+      if(chartRecord) {
+      	Ext.getCmp('chart_tree').enableAllButtons();
+      } 
     }
   },
 

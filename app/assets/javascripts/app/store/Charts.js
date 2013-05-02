@@ -6,6 +6,11 @@ Ext.define('CC.store.Charts', {
   autoLoad: true,
   autoSync: false,
 
+  
+  sorters: {
+    property: 'group',
+    direction: 'ASC'// or 'DESC' (case sensitive for local sorting)
+	},
 	//storeId: 'charts',
 	
 	//for debuging

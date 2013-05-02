@@ -1,6 +1,5 @@
 /**
  *= require_self
- *= require extjs4/src/ux/ColorPickerCombo
 */
 
 Ext.require('Chart.ux.Highcharts');
@@ -33,7 +32,8 @@ Ext.application({
   appFolder: '/assets/app',
   controllers: ['Charts'],
   requires: [
-		'CC.ChartsConfig'
+		'CC.ChartsConfig',
+		'CC.Variables',
   ],
   autoCreateViewport: true
 });

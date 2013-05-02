@@ -15,7 +15,7 @@ Ext.define('CC.view.chart.WritableGrid', {
 
         Ext.apply(this, {
             //iconCls: 'icon-grid',
-            frame: true,
+            frame: false,
             plugins: [this.editing],
             collapsible: true,
             collapsed: false,

@@ -9,5 +9,4 @@ Ext.define('CC.model.Datum', {
 		{ name: 'data_index', type: 'float' }
   ],
 
-  
 });

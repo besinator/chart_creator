@@ -12,6 +12,7 @@ Ext.define('CC.model.Chart', {
   validations: [
     { type: 'presence', field: 'name' },
     { type: 'presence', field: 'chart_type' },
+    { type: 'inclusion', field: 'chart_type', list: CC.Variables.chart_types },
   ],
 
   proxy: {

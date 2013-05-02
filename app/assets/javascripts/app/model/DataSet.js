@@ -9,7 +9,20 @@ Ext.define('CC.model.DataSet', {
     { name: 'series_type', type: 'string' },
     { name: 'dash_style', type: 'string' },
     { name: 'color', type: 'string' },
+    { name: 'series_function', type: 'string' },
+    { name: 'x_start', type: 'float' },
+    { name: 'x_end', type: 'float' },
+    { name: 'x_step', type: 'float' },
   ],
+
+  validations: [
+  	//{ type: 'inclusion', field: 'series_type', list: CC.Variables.chart_types },
+  	{ type: 'inclusion', field: 'dash_style', list: CC.Variables.dash_styles },
+  	{	type: 'format', field: 'color', matcher: CC.Variables.color_matcher }, //color 
+  	{ type: 'exclusion', field: 'x_step', list: [0] },
+  	{	type: 'format', field: 'series_function', matcher: CC.Variables.series_function_matcher },
+  ],
+
   
   proxy: {
     url: '/charts/1/data_sets',	//should be in this format - charts id needs to be dynamically changed

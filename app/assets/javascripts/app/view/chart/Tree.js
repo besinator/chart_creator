@@ -18,7 +18,7 @@ Ext.define('CC.view.chart.Tree' ,{
     ];
 		
 		this.showChartButton = new Ext.Button({
-      text: 'Show',
+      text: 'Show/Reload',
       action: 'showChart',
       disabled: true
     });
@@ -74,13 +74,11 @@ Ext.define('CC.view.chart.Tree' ,{
   	this.showChartButton.enable();
     this.editChartButton.enable();
     this.deleteChartButton.enable();
-    this.addChartButton.enable();
   },
 
   disableAllButtons: function() {
   	this.showChartButton.disable();
     this.editChartButton.disable();
     this.deleteChartButton.disable();
-    this.addChartButton.disable();
   }
 });
