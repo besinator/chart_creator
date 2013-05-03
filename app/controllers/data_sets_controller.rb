@@ -57,7 +57,7 @@ class DataSetsController < ApplicationController
   	data_set.destroy
 
     respond_with(data_set) do |format|
-      format.json { render json: { success: true, data_sets: data_set } }
+      format.json { render json: { success: data_set.destroyed? } }
     end
   end
 end

@@ -57,7 +57,7 @@ class ChartsController < ApplicationController
     chart.destroy
 
     respond_with(chart) do |format|
-      format.json { render json: { success: true, charts: chart } }
+      format.json { render json: { success: chart.destroyed? } }
     end
   end
 end

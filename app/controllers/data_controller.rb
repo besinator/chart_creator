@@ -27,12 +27,15 @@ class DataController < ApplicationController
 			data_arr = params[:_json]
 			data = Array.new
 			all_valid = true
-		
-			data_arr.each do |item|
-				data.push(data_set.data.new(item))
-				data.last.save
-				if !data.last.valid?
-					all_valid = false
+			
+			#save all data in one transaction
+			Datum.transaction do
+				data_arr.each do |item|
+					data.push(data_set.data.new(item))
+					data.last.save
+					if !data.last.valid?
+						all_valid = false
+					end
 				end
 			end
 			
@@ -40,7 +43,7 @@ class DataController < ApplicationController
       	if all_valid
         	format.json { render json: { success: true, data: data } }
       	else
-        	format.json { render json: { success: false, errors: 'invalid data' } }
+        	format.json { render json: { success: false, errors: 'Data werent created' } }
       	end
     	end
     	
@@ -71,11 +74,14 @@ class DataController < ApplicationController
 			data = Array.new
 			all_valid = true
 		
-			data_arr.each do |item|
-				data.push(data_set.data.find(item[:id]))
-				data.last.update_attributes(item)
-				if !data.last.valid?
-					all_valid = false
+			#update all data in one transaction
+			Datum.transaction do
+				data_arr.each do |item|
+					data.push(data_set.data.find(item[:id]))
+					data.last.update_attributes(item)
+					if !data.last.valid?
+						all_valid = false
+					end
 				end
 			end
 			
@@ -83,7 +89,7 @@ class DataController < ApplicationController
       	if all_valid
         	format.json { render json: { success: true, data: data } }
       	else
-        	format.json { render json: { success: false, errors: 'invalid data' } }
+        	format.json { render json: { success: false, errors: 'Date werent updated' } }
       	end
     	end
     	
@@ -112,14 +118,19 @@ class DataController < ApplicationController
 		if params[:_json].kind_of?(Array)
 			data_arr = params[:_json]
 			data = Array.new
-		
-			data_arr.each do |item|
-				datum = data_set.data.find(item[:id])
-				datum.destroy
+			all_destroyed = true
+			
+			#delete all data in one transaction
+			Datum.transaction do
+				data_arr.each do |item|
+					datum = data_set.data.find(item[:id])
+					datum.destroy
+					all_destroyed = datum.destroyed?
+				end
 			end
 			
 			respond_with(data) do |format|
-        	format.json { render json: { success: true } }
+        	format.json { render json: { success: all_destroyed } }
     	end
     	
 		#if there is only one datum
@@ -128,7 +139,7 @@ class DataController < ApplicationController
   		datum.destroy
 
     	respond_with(datum) do |format|
-      	format.json { render json: { success: true } }
+      	format.json { render json: { success: datum.destroyed? } }
     	end
 		end
   end
