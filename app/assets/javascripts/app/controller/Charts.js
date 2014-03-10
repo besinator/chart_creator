@@ -363,10 +363,47 @@ Ext.define('CC.controller.Charts', {
 		data_store.getProxy().headers = {
 			'X-CSRF-Token': Ext.select("meta[name='csrf-token']").elements[0].content,
 		};
+		function isNumber(n) {
+	        	return !isNaN(parseFloat(n)) && isFinite(n);
+	        }
+		var math = mathjs();
+		var result = math.eval(
+			"x="+set_values.x_start+
+			":"+set_values.x_step+
+			":"+set_values.x_end+
+			"\n"+set_values.series_function
+		);
+		var len = result[0]._data.length;
+		var i = 0;
+		var arr = [];
+		for(i=0; i<len; i++)
+		{
+			if(isNumber(result[0]._data[i]) && isNumber(result[1]._data[i]))
+			{
+				arr.push({"x_field":result[0]._data[i],"data_index":result[1]._data[i]});	
+			}	
+		}
+		var data_store_tmp = Ext.create('CC.store.Data');
+		data_store_tmp.loadData(arr,false);
+
+		var temp_store = Ext.create('CC.store.Data');
+		me.data_stores[tabindex].removeAll(); //first remove all records - and update db
+		data_store_tmp.data.each(function(record){
+       		    temp_store.add(record.copy());
+                });
+		me.data_stores[tabindex].add(temp_store.getRange());
+                temp_store.destroyStore();
+                data_store_tmp.destroyStore();
+
+	
+		
 		//create temp store where will be all records copied to, only after that send data to grid store
 		//temp store will enourmously speed up the loading, at the end destroy unneeded stores
+			/*
 			var temp_store = Ext.create('CC.store.Data');
 			me.data_stores[tabindex].removeAll(); //first remove all records - and update db
+			
+			data_store.add
 			data_store.load(function () {
 				data_store.data.each(function(record){
   				temp_store.add(record.copy());
@@ -375,6 +412,7 @@ Ext.define('CC.controller.Charts', {
 				temp_store.destroyStore();
 				data_store.destroyStore();
 			});
+			*/
 		}
   },
   

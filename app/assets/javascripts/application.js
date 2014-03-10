@@ -14,6 +14,7 @@
  *= require extjs4/ext-all-debug
  *= require jquery
  *= require jquery_ujs
+ *= require math.js
  *= require Highcharts/js/highcharts
  *= require Highcharts/js/highcharts-more
  *= require Highcharts/js/modules/funnel
