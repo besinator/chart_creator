@@ -17,7 +17,7 @@ Ext.define('CC.view.chart.Tree' ,{
       */
     ];
 		
-		this.showChartButton = new Ext.Button({
+    this.showChartButton = new Ext.Button({
       text: 'Show/Reload',
       action: 'showChart',
       disabled: true

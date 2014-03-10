@@ -3,13 +3,19 @@
 <head>
   <title>ChartManager</title>
   <%= yield :script %>
-
-  <%= csrf_meta_tags %>
-  
+  <%= csrf_meta_tag %>
 </head>
 <body>
 
 <%= yield %>
+
+<% if user_signed_in? %>
+  <p>Loading...</p>
+<% else %>
+  <li>
+  <%= link_to('Login', new_user_session_path)  %>
+  </li>
+<% end %>
 
 </body>
 </html>

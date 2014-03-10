@@ -12,7 +12,8 @@
 //
 /**
  *= require extjs4/ext-all-debug
- *= require jquery-1.7.2.min
+ *= require jquery
+ *= require jquery_ujs
  *= require Highcharts/js/highcharts
  *= require Highcharts/js/highcharts-more
  *= require Highcharts/js/modules/funnel

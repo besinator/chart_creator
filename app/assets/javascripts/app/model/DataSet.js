@@ -29,6 +29,10 @@ Ext.define('CC.model.DataSet', {
     type: 'rest',
     format: 'json',
 
+    headers: {
+      'X-CSRF-Token': Ext.select("meta[name='csrf-token']").elements[0].content,
+    },
+
     reader: {
       root: 'data_sets',
       //record: 'detail',

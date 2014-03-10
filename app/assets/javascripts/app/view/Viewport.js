@@ -19,6 +19,32 @@ Ext.define('CC.view.Viewport', {
     margins: '0 0 0 0',
     id: 'chart_panel',
     //html : 'Blank',
+    tools: [{
+        xtype: 'button',
+        text: 'Profile settings',
+        action: 'userChangePassword'
+    },
+    {
+        xtype: 'form',
+        defaultMargins: '0 0 0 0',
+        standardSubmit: true,
+        url:'/users/sign_out',
+        items: [{
+          xtype: 'hidden',
+          name: '_method',
+          value: 'delete',
+        },
+        {
+          xtype: 'hidden',
+          name: 'authenticity_token',
+          value: Ext.select("meta[name='csrf-token']").elements[0].content,
+        }]
+    },
+    {
+        xtype: 'button',
+        text: 'Logout',
+        action: 'userLogout' 
+    }],
     bbar: [{
     	xtype: 'tbfill',
     	height: 22,

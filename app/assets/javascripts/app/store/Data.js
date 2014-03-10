@@ -47,6 +47,9 @@ Ext.define('CC.store.Data', {
       successProperty: 'success',
       messageProperty: 'errors'
     },
+    headers: {
+      'X-CSRF-Token': Ext.select("meta[name='csrf-token']").elements[0].content,
+    },
     writer: {
       //redefine getRecordData method - to respond with specific format
       /*

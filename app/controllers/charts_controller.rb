@@ -1,11 +1,12 @@
 class ChartsController < ApplicationController
+  before_filter :authenticate_user!
   respond_to :json
 
 	#-----------------------------------------------------
 	#get all charts => GET /charts
 	#-----------------------------------------------------
   def index
-  	current_user = User.first
+  	#current_user = User.first
     charts = current_user.charts.all
 
     respond_with(charts) do |format|
@@ -18,7 +19,7 @@ class ChartsController < ApplicationController
 	#create chart => POST /charts
 	#-----------------------------------------------------
   def create
-    current_user = User.first
+    #current_user = User.first
     chart = current_user.charts.new(params[:chart])
     chart.save
 
@@ -35,7 +36,7 @@ class ChartsController < ApplicationController
 	#update chart => PUT /charts/<id>
 	#-----------------------------------------------------
   def update
-  	current_user = User.first
+  	#current_user = User.first
   	chart =  current_user.charts.find(params[:id])
     chart.update_attributes(params[:chart])
 
@@ -52,7 +53,7 @@ class ChartsController < ApplicationController
 	#delete chart => DELETE /charts/<id>
 	#-----------------------------------------------------
   def destroy
-  	current_user = User.first
+  	#current_user = User.first
   	chart =  current_user.charts.find(params[:id])
     chart.destroy
 

@@ -63,6 +63,7 @@ Ext.define('CC.view.chart.Form', {
 					xtype: 'hidden',
 					name : 'id',
 					fieldLabel: 'id'
+					
    	    }, {
 					xtype: 'textfield',
 					name : 'name',
@@ -322,6 +323,7 @@ Ext.define('CC.view.chart.Form', {
 					xtype: 'numberfield',
 					name : 'x_step',
 					fieldLabel: 'X step',
+					minValue: 0,
 					value: '0.2',
 				}
 				],

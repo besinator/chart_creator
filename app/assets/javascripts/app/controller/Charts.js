@@ -50,7 +50,13 @@ Ext.define('CC.controller.Charts', {
       },
       'button[action=deleteChart]': {
         click: this.deleteChart
-      }
+      },
+      'button[action=userLogout]': {
+        click: this.userLogout
+      },
+      'button[action=userChangePassword]': {
+        click: this.userChangePassword
+      },
     });
   },
   
@@ -308,6 +314,20 @@ Ext.define('CC.controller.Charts', {
 		ChartCreator.menu.showAt(evt.point.pageX + 5, evt.point.pageY + 5);
   },
 
+//-------------------------------------------------------------------------------------
+//userChangePassword
+//-------------------------------------------------------------------------------------
+  userChangePassword: function(btn) {
+    window.location.href = "/users/edit";
+  },
+
+//-------------------------------------------------------------------------------------
+//userLogout - sign out user - send request to destroy session
+//-------------------------------------------------------------------------------------
+  userLogout: function(btn) {
+    var form = btn.up('panel').down('form');
+    form.submit();
+  },
 
 //-------------------------------------------------------------------------------------
 //generateSeriesData - get data from octave - after load the data will be shown in grid - runned from 
@@ -340,6 +360,9 @@ Ext.define('CC.controller.Charts', {
   			x_end: set_values.x_end,
   			x_step: set_values.x_step,
   		};
+		data_store.getProxy().headers = {
+			'X-CSRF-Token': Ext.select("meta[name='csrf-token']").elements[0].content,
+		};
 		//create temp store where will be all records copied to, only after that send data to grid store
 		//temp store will enourmously speed up the loading, at the end destroy unneeded stores
 			var temp_store = Ext.create('CC.store.Data');

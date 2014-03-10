@@ -16,6 +16,10 @@ Ext.define('CC.model.Detail', {
     type: 'rest',
     format: 'json',
 
+    headers: {
+      'X-CSRF-Token': Ext.select("meta[name='csrf-token']").elements[0].content,
+    },
+
     reader: {
       root: 'details',
       //record: 'detail',

@@ -19,22 +19,30 @@ Ext.define('CC.model.Chart', {
     url: '/charts',
     type: 'rest',
     format: 'json',
-
+    /*
+    extraParams: {
+      authenticity_token: Ext.select("meta[name='csrf-token']").elements[0].content,
+    },
+    */
+    headers: {
+      'X-CSRF-Token': Ext.select("meta[name='csrf-token']").elements[0].content,
+    },
     reader: {
       root: 'charts',
       //record: 'chart',
       successProperty: 'success',
       messageProperty: 'errors'
     },
+    /*
     writer: {
-      //redefine getRecordData method - to respond with specific format
-      /*
+      //include csrf authetication token in requests
       getRecordData: function(record) {
         var data = record.data;
-    		return { chart: data };
+        data.authenticity_token = Ext.select("meta[name='csrf-token']").elements[0].content;
+        return data;
       }
-      */
     },
+    */
     buildUrl: function(request) {
     	var records = request.operation.records || [],
         record  = records[0],

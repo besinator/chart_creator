@@ -1,4 +1,5 @@
 class OctaveDataController < ApplicationController
+  before_filter :authenticate_user!
   respond_to :json
 
 	#-----------------------------------------------------
@@ -13,6 +14,7 @@ class OctaveDataController < ApplicationController
     #send x and y to octave and get calculated data 
     #printf format is json - [{"x":1.0,"y":1.5},{"x":2.0,"y":1.3},...}]
     #check if y is not nan - dont send NaN, Inf, NA values
+    
     octave_data = `octave -q --eval "
     
     			x=[#{x_start}:#{x_step}:#{x_end}];

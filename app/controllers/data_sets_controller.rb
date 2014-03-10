@@ -1,11 +1,13 @@
 class DataSetsController < ApplicationController
+  before_filter :authenticate_user!
   respond_to :json
 
 	#-----------------------------------------------------
 	#get all data sets => GET /charts/<id>/data_sets
 	#-----------------------------------------------------
   def index
-  	chart = Chart.find(params[:chart_id])
+    #chart = Chart.find(params[:chart_id])
+    chart = Chart.where("id = ? AND user_id = ?", params[:chart_id], current_user.id).limit(1)[0]
     data_sets = chart.data_sets.all
 
     respond_with(data_sets) do |format|
@@ -18,7 +20,8 @@ class DataSetsController < ApplicationController
 	#create data sets => POST /charts/<id>/data_sets
 	#-----------------------------------------------------
   def create
-		chart = Chart.find(params[:chart_id])
+    #chart = Chart.find(params[:chart_id])
+    chart = Chart.where("id = ? AND user_id = ?", params[:chart_id], current_user.id).limit(1)[0]
     data_set = chart.data_sets.new(params[:data_set])
     data_set.save
 
@@ -35,7 +38,8 @@ class DataSetsController < ApplicationController
 	#update data sets => PUT /charts/<id>/data_sets/<id>
 	#-----------------------------------------------------
   def update
-    chart = Chart.find(params[:chart_id])
+    #chart = Chart.find(params[:chart_id])
+    chart = Chart.where("id = ? AND user_id = ?", params[:chart_id], current_user.id).limit(1)[0]
     data_set = chart.data_sets.find(params[:id])
   	data_set.update_attributes(params[:data_set])
 
@@ -52,7 +56,8 @@ class DataSetsController < ApplicationController
 	#delete data sets => DELETE /charts/<id>/data_sets/<id>
 	#-----------------------------------------------------
   def destroy
-  	chart = Chart.find(params[:chart_id])
+  	#chart = Chart.find(params[:chart_id])
+    	chart = Chart.where("id = ? AND user_id = ?", params[:chart_id], current_user.id).limit(1)[0]
   	data_set = chart.data_sets.find(params[:id])
   	data_set.destroy
 

@@ -27,7 +27,7 @@ Ext.ns("ChartCreator");
 
 //Instance of application
 Ext.application({
-  //global namespace - chart manager
+  //global namespace - chart creator
   name: 'CC',
   appFolder: '/assets/app',
   controllers: ['Charts'],
